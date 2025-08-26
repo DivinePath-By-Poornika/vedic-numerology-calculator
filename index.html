@@ -1,419 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Vimshottari Dasha Calculator • Divine Path by Poonam</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-<meta name="description" content="Ultra-premium single-file Vimshottari Dasha calculator (Mahadasha + Antardasha). Part of Divine Path — Tarot by Poonam (Poornika).">
-
-<!-- Astronomy Engine (high-precision planetary positions) -->
-<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.min.js"></script>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Divine Path | Vimshottari Dasha Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#090b10; --panel:#0f1320cc; --ink:#e8ecf6; --muted:#a7b0c4;
-    --line:#1f2a44; --brand:#ffd166; --teal:#7ee8fa; --vio:#b993ff;
-    --r:18px; --blur:16px; --shadow:0 18px 50px rgba(0,0,0,.45);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; color:var(--ink);
-    background:
-      radial-gradient(1000px 600px at 15% -10%,#1b2234 0%,transparent 60%),
-      radial-gradient(900px 500px at 85% 0%,#2a1a40 0%,transparent 60%),
-      linear-gradient(180deg,#0a0d14 0%,#05060a 100%),
-      url('https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1600&auto=format&fit=crop') center/cover fixed;
-    background-blend-mode:screen,screen,normal,overlay; min-height:100dvh;
-  }
-  .wrap{max-width:1100px; margin:auto; padding:22px}
-  header.nav{position:sticky; top:0; z-index:50; backdrop-filter:saturate(140%) blur(var(--blur));
-    background:linear-gradient(180deg, #0d111acc, #0b0f18aa); border-bottom:1px solid var(--line)}
-  .row{display:flex; align-items:center; justify-content:space-between; gap:16px}
-  .brand{font-family:"Playfair Display",serif; font-weight:700; color:var(--brand); display:flex; gap:.6rem; align-items:center}
-  .brand .dot{width:10px; height:10px; border-radius:50%; background:var(--vio); box-shadow:0 0 16px var(--vio)}
-  nav ul{display:flex; gap:22px; list-style:none; margin:0; padding:0}
-  nav a{color:var(--ink); text-decoration:none; font-weight:700; opacity:.9}
-  nav a:hover{color:var(--brand)}
-
-  .hero{display:grid; place-items:center; text-align:center; min-height:64vh; position:relative}
-  .hero .panel{position:relative; padding:28px 22px; border:1px solid var(--line); border-radius:calc(var(--r)+6px);
-    background:linear-gradient(180deg, var(--panel), #0c0f1acc); box-shadow:var(--shadow)}
-  .kicker{color:var(--brand); font-weight:900; letter-spacing:.18em; text-transform:uppercase; font-size:.82rem}
-  h1{font-family:"Playfair Display",serif; font-size:clamp(2.2rem,4.6vw,3.3rem); line-height:1.08; margin:.6rem 0 1rem}
-  .sub{max-width:760px; margin:auto; color:var(--muted)}
-
-  /* Buttons: waterdrop glass */
-  .btn{position:relative; display:inline-flex; align-items:center; gap:.6rem; cursor:pointer;
-    padding:1rem 1.15rem; border-radius:999px; text-decoration:none; font-weight:900; color:#2b1f0a;
-    background:linear-gradient(135deg,#ffe08c,#ff9f4d); box-shadow:0 10px 26px rgba(255,185,72,.35);
-    transform:translateY(0); transition:transform .25s ease, box-shadow .25s ease, filter .25s ease; border:0}
-  .btn:hover{transform:translateY(-3px); box-shadow:0 16px 32px rgba(255,185,72,.55); filter:saturate(110%)}
-  .btn.glass{color:var(--ink); background:linear-gradient(180deg,#ffffff18,#ffffff06);
-    border:1px solid #ffffff28; box-shadow:inset 0 1px 0 #ffffff22, 0 8px 24px rgba(0,0,0,.3);
-    backdrop-filter: blur(16px)}
-  .btn .drop{position:absolute; inset:auto auto -8px 16px; width:26px; height:26px; border-radius:50%;
-    background:radial-gradient(circle at 30% 30%, #fff8, #fff0 70%);
-    box-shadow:inset 0 2px 8px #ffffff55, 0 8px 20px rgba(255,255,255,.15);
-    animation:float 3.2s ease-in-out infinite; pointer-events:none}
-  @keyframes float{0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)}}
-
-  .grid{display:grid; gap:22px}
-  @media(min-width:920px){.grid{grid-template-columns:1fr 1fr}}
-  .card{border:1px solid var(--line); border-radius:var(--r); padding:20px; background:linear-gradient(180deg, var(--panel), #0c0f1acc); box-shadow:var(--shadow)}
-  .card h2{font-family:"Playfair Display",serif; font-size:clamp(1.6rem,2.6vw,2.1rem); margin:0 0 .4rem}
-  .lead{color:var(--muted)}
-  .field{display:grid; gap:6px}
-  .field label{font-size:.9rem; color:#c9d0e4; font-weight:800}
-  .field input, .field select{
-    -webkit-appearance:none; appearance:none; outline:none;
-    background:linear-gradient(180deg,#0e1322,#0a0f1a);
-    border:1px solid #24304b; color:var(--ink); border-radius:12px; padding:.9rem .95rem; font-weight:700;
-    box-shadow:inset 0 1px 0 #ffffff12, 0 8px 20px rgba(0,0,0,.25)
-  }
-  .small{font-size:.9rem; color:#b8c2da}
-  table{width:100%; border-collapse:separate; border-spacing:0 10px}
-  th, td{padding:10px 12px; text-align:left}
-  thead th{font-size:.9rem; color:#c8d0e3}
-  tbody tr{background:linear-gradient(180deg,#0f1424,#0a0f1a); border:1px solid #1e2a45}
-  tbody tr td:first-child{border-radius:12px 0 0 12px}
-  tbody tr td:last-child{border-radius:0 12px 12px 0}
-  .muted{color:var(--muted)} .pill{display:inline-block; padding:.3rem .6rem; border:1px solid #2a3350; border-radius:999px; color:#cbd3e6; font-size:.78rem}
-  footer{margin:56px 0 22px; text-align:center; color:#9eacc7}
-  footer a{color:var(--brand); text-decoration:none}
+  body {margin:0;padding:0;font-family:'Poppins',sans-serif;background:linear-gradient(135deg,#1f1f2e,#121212);color:#fff;text-align:center;}
+  header {padding:20px;font-family:'Playfair Display';font-size:2rem;color:#f8d66d;}
+  .container {max-width:800px;margin:auto;padding:20px;background:rgba(255,255,255,0.05);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+  label {display:block;margin-top:15px;font-weight:500;}
+  input {width:100%;padding:10px;border-radius:8px;border:none;margin-top:8px;font-size:1rem;}
+  button {margin-top:20px;padding:12px 20px;background:#f8d66d;color:#000;font-weight:600;border:none;border-radius:12px;cursor:pointer;font-size:1rem;}
+  button:hover {background:#ffe68a;}
+  .results {margin-top:25px;text-align:left;}
+  .dasha-table {width:100%;border-collapse:collapse;margin-top:15px;}
+  .dasha-table th,.dasha-table td {border:1px solid #444;padding:8px;text-align:center;}
+  .highlight {background:rgba(248,214,109,0.2);font-weight:600;}
+  .share-btn {margin-top:15px;background:#1db954;color:#fff;}
 </style>
-</head>
-<body>
+<script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.0/astronomy.min.js" defer></script>
+<script defer>
+document.addEventListener('DOMContentLoaded',()=>{
 
-<!-- NAV -->
-<header class="nav">
-  <div class="wrap row">
-    <div class="brand"><span class="dot"></span> Divine Path</div>
-    <nav>
-      <ul>
-        <li><a href="#calc">Calculator</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-    </nav>
-    <a class="btn" href="#contact">Book a Reading ✨<span class="drop"></span></a>
-  </div>
-</header>
-
-<!-- HERO -->
-<section class="hero" id="home">
-  <div class="wrap">
-    <div class="panel">
-      <div class="kicker">Guided by Jyotish • Blessed by the Divine</div>
-      <h1>Vimshottari Dasha Calculator</h1>
-      <p class="sub">
-        Single-file, premium web app. Computes Moon → Nakshatra (Lahiri-style ayanāṁśa) → Mahadasha (120 yrs) & Antardasha timeline.
-        This tool is part of <strong>Divine Path — Tarot by Poonam (Poornika)</strong>.
-      </p>
-      <div style="margin-top:14px">
-        <a href="#calc" class="btn glass">Start Calculation ⟶</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CALCULATOR -->
-<section id="calc" class="wrap grid">
-  <div class="card">
-    <h2>Your Birth Details</h2>
-    <p class="lead">Sirf apni details do—baaki sab auto. Timezone zaroor bharna (e.g. +05:30 for IST).</p>
-    <div class="grid" style="grid-template-columns:1fr 1fr">
-      <div class="field">
-        <label>Full Name</label>
-        <input id="name" placeholder="Your name" />
-      </div>
-      <div class="field">
-        <label>Date of Birth</label>
-        <input id="dob" type="date" />
-      </div>
-      <div class="field">
-        <label>Birth Time</label>
-        <input id="tob" type="time" step="1" />
-      </div>
-      <div class="field">
-        <label>Timezone (e.g. +05:30)</label>
-        <input id="tz" placeholder="+05:30" />
-      </div>
-      <div class="field">
-        <label>Ayanāṁśa</label>
-        <select id="ayanType">
-          <option value="lahiri">Lahiri (approx.)</option>
-          <option value="fagan">Fagan/Bradley (approx.)</option>
-          <option value="custom">Custom offset…</option>
-        </select>
-      </div>
-      <div class="field" id="customAyanWrap" style="display:none">
-        <label>Custom Ayanāṁśa Offset (degrees)</label>
-        <input id="customAyan" type="number" step="0.0001" placeholder="e.g. 24.12" />
-      </div>
-    </div>
-
-    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:16px">
-      <button class="btn" id="calcBtn">Calculate Now <span class="drop"></span></button>
-      <button class="btn glass" id="shareBtn" title="Copy a link with your inputs">Share Results</button>
-      <button class="btn glass" id="sampleBtn" title="Try with a sample">Try Sample</button>
-    </div>
-    <p class="small" style="margin-top:10px">
-      Accuracy: Moon position via Astronomy Engine (high precision). Ayanāṁśa is J2000 anchor + standard precession rate—close to Lahiri/Fagan.
-      Results generally match standard tools; near nakshatra boundaries, choose custom offset if needed.
-    </p>
-  </div>
-
-  <div class="card">
-    <h2>Summary</h2>
-    <div id="summary" class="lead">Fill details and press <em>Calculate</em>.</div>
-    <div style="height:8px"></div>
-    <div id="moonBox" class="small"></div>
-  </div>
-
-  <div class="card" style="grid-column:1/-1">
-    <h2>Mahadasha Timeline (120 years)</h2>
-    <div class="small muted" id="mdInfo"></div>
-    <div style="height:8px"></div>
-    <div style="overflow:auto">
-      <table id="mdTable">
-        <thead><tr><th>#</th><th>Mahadasha</th><th>Start</th><th>End</th><th>Years</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="card" style="grid-column:1/-1">
-    <h2>Antardasha (Bhukti)</h2>
-    <div class="small muted">Click any Mahadasha row to view its Antardasha schedule.</div>
-    <div id="adWrap"></div>
-  </div>
-</section>
-
-<!-- ABOUT / CONTACT -->
-<section id="about" class="wrap grid">
-  <div class="card">
-    <span class="pill">About</span>
-    <h2>Divine Path — Tarot by Poonam (Poornika)</h2>
-    <p class="lead">Ye calculator meri pehle waali website ka hi advanced part hai. Tarot & spiritual guidance ke saath-saath main Jyotish (Vimshottari) interpretation bhi provide karti hoon.</p>
-  </div>
-  <div class="card" id="contact">
-    <span class="pill">Contact</span>
-    <h2>Let’s Connect ✨</h2>
-    <div class="grid" style="grid-template-columns:1fr 1fr">
-      <a class="btn glass" href="mailto:divinepath743@gmail.com?subject=Reading%20Inquiry%20—%20Divine%20Path" target="_blank" rel="noopener">Email: divinepath743@gmail.com</a>
-      <a class="btn glass" href="https://wa.me/919835230370" target="_blank" rel="noopener">WhatsApp: +91 9835230370</a>
-      <a class="btn glass" href="https://instagram.com/punamtarotcardreader" target="_blank" rel="noopener">Instagram: @punamtarotcardreader</a>
-      <a class="btn" href="#calc">Open Calculator</a>
-    </div>
-    <p class="small" style="margin-top:10px">Buttons open exactly the handles you provided. ✅</p>
-  </div>
-</section>
-
-<footer>
-  Guidance through Tarot, Blessings through the Divine • © 2025 Poonam/Poornika — All Rights Reserved • Built with ❤️
-</footer>
-
-<script>
-/* ---------- Helpers ---------- */
-const $ = id => document.getElementById(id);
-const fmt2 = n => n.toString().padStart(2,'0');
-const round = (x,d=2) => Math.round(x*10**d)/10**d;
-const DAYS_PER_YEAR = 365.2425;
-const LORD_ORDER = ['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'];
-const MD_YEARS = {Ketu:7, Venus:20, Sun:6, Moon:10, Mars:7, Rahu:18, Jupiter:16, Saturn:19, Mercury:17};
-const NAKS = [
-  ['Ashwini','Ketu'],['Bharani','Venus'],['Krittika','Sun'],['Rohini','Moon'],['Mrigashira','Mars'],['Ardra','Rahu'],['Punarvasu','Jupiter'],['Pushya','Saturn'],['Ashlesha','Mercury'],
-  ['Magha','Ketu'],['Purva Phalguni','Venus'],['Uttara Phalguni','Sun'],['Hasta','Moon'],['Chitra','Mars'],['Swati','Rahu'],['Vishakha','Jupiter'],['Anuradha','Saturn'],['Jyeshtha','Mercury'],
-  ['Mula','Ketu'],['Purva Ashadha','Venus'],['Uttara Ashadha','Sun'],['Shravana','Moon'],['Dhanishta','Mars'],['Shatabhisha','Rahu'],['Purva Bhadrapada','Jupiter'],['Uttara Bhadrapada','Saturn'],['Revati','Mercury']
+const dashaSequence=[
+  {lord:'Ketu',years:7},
+  {lord:'Venus',years:20},
+  {lord:'Sun',years:6},
+  {lord:'Moon',years:10},
+  {lord:'Mars',years:7},
+  {lord:'Rahu',years:18},
+  {lord:'Jupiter',years:16},
+  {lord:'Saturn',years:19},
+  {lord:'Mercury',years:17}
 ];
 
-function parseTZ(str){
-  if(!str) return null;
-  const s = String(str).trim();
-  // +05:30  | -07 | +5.5
-  let m = s.match(/^([+-])?(\d{1,2})(?::?(\d{2}))$/);
-  if(m){
-    const sign = (m[1]==='-')?-1:1;
-    const hh = parseInt(m[2],10)||0;
-    const mm = parseInt(m[3],10)||0;
-    return sign*(hh*60+mm);
+window.calculateDasha=function(){
+  if(typeof Astronomy==='undefined'){alert('Library not loaded yet. Please refresh.');return;}
+
+  const dob=document.getElementById('dob').value;
+  const tob=document.getElementById('time').value;
+  const tz=document.getElementById('tz').value;
+  if(!dob||!tob||!tz){alert('Please fill all fields');return;}
+
+  const[y,m,d]=dob.split('-').map(Number);
+  const[hh,mm]=tob.split(':').map(Number);
+
+  const sign=tz[0]==='-'?-1:1;
+  const[th,tm]=tz.slice(1).split(':').map(Number);
+  const offset=sign*(th+(tm||0)/60);
+
+  const date=new Date(Date.UTC(y,m-1,d,hh-offset,mm));
+
+  const observer=new Astronomy.Observer(0,0,0);
+  const time=new Astronomy.AstroTime(date);
+  const geoMoon=Astronomy.Equator('Moon',time,observer,true,true);
+  const eclMoon=Astronomy.Ecliptic(geoMoon);
+  let moonLon=eclMoon.elon;
+
+  const lahiri=23.85;
+  let siderealLon=moonLon-lahiri;
+  if(siderealLon<0)siderealLon+=360;
+
+  const nakIndex=Math.floor(siderealLon/13.3333);
+  const nakFraction=(siderealLon%13.3333)/13.3333;
+
+  const lords=['Ketu','Venus','Sun','Moon','Mars','Rahu','Jupiter','Saturn','Mercury'];
+  const startLord=lords[nakIndex%9];
+
+  const dobDate=new Date(dob+'T'+tob+':00');
+  let currentDate=new Date(dobDate);
+
+  const startIndex=dashaSequence.findIndex(d=>d.lord===startLord);
+  let balance=1-nakFraction;
+
+  let html=`<h3>Moon Longitude: ${siderealLon.toFixed(2)}°</h3>`;
+  html+=`<h4>Starting Mahadasha: ${startLord}</h4>`;
+  html+=`<table class='dasha-table'><tr><th>Lord</th><th>Start</th><th>End</th></tr>`;
+
+  let index=startIndex;
+  for(let i=0;i<dashaSequence.length;i++){
+    const lord=dashaSequence[index];
+    let years=lord.years;
+    if(i===0)years*=balance;
+
+    const start=new Date(currentDate);
+    currentDate.setFullYear(currentDate.getFullYear()+Math.floor(years));
+    currentDate.setDate(currentDate.getDate()+Math.round((years%1)*365.25));
+
+    html+=`<tr ${i===0?'class="highlight"':''}><td>${lord.lord}</td><td>${start.toDateString()}</td><td>${currentDate.toDateString()}</td></tr>`;
+
+    index=(index+1)%dashaSequence.length;
+    balance=1;
   }
-  m = s.match(/^([+-])?(\d{1,2})(?:\.(\d+))?$/);
-  if(m){
-    const sign = (m[1]==='-')?-1:1;
-    const hh = parseInt(m[2],10)||0;
-    const frac = m[3]? parseFloat('0.'+m[3]) : 0;
-    const mm = Math.round(frac*60);
-    return sign*(hh*60+mm);
-  }
-  return null;
-}
-function toUTC(dateStr, timeStr, tzStr){
-  const tzMin = parseTZ(tzStr);
-  if(tzMin===null) throw new Error('Invalid timezone. Use +05:30, -07, +5.5, etc.');
-  const [h=0,m=0,s=0] = (timeStr||'00:00:00').split(':').map(n=>parseInt(n||'0',10));
-  const local = new Date(dateStr + 'T' + fmt2(h)+':'+fmt2(m)+':'+fmt2(s));
-  return new Date(local.getTime() - tzMin*60*1000); // local→UTC by provided offset
-}
-function addDays(d,days){ return new Date(d.getTime() + days*86400000); }
-function fmtUTC(d){ return `${d.getUTCFullYear()}-${fmt2(d.getUTCMonth()+1)}-${fmt2(d.getUTCDate())} ${fmt2(d.getUTCHours())}:${fmt2(d.getUTCMinutes())} UTC`; }
-function wrap360(x){ x%=360; return (x<0)?x+360:x; }
 
-/* ---------- Ayanamsa (approximate but close) ---------- */
-function ayanamsaDegrees(date, type='lahiri', custom=0){
-  const years = (date - new Date('2000-01-01T12:00:00Z'))/(365.2425*86400000);
-  const rate = 50.29/3600; // deg/yr
-  const baseLahiri2000 = 23 + 51/60 + 10/3600;   // ≈ 23.8528°
-  const baseFagan2000  = 24 + 2/60 + 39.25/3600; // ≈ 24.04424°
-  if(type==='lahiri') return baseLahiri2000 + years*rate;
-  if(type==='fagan')  return baseFagan2000  + years*rate;
-  return custom || baseLahiri2000 + years*rate;
+  html+=`</table>`;
+
+  document.getElementById('results').innerHTML=html+`<button class='share-btn' onclick='shareResults()'>Share Results</button>`;
 }
 
-/* ---------- Moon longitude (sidereal) ---------- */
-function moonLongitudes(utcDate, ayanDeg){
-  // Astronomy Engine: geocentric ecliptic longitude (tropical)
-  const vec = Astronomy.GeoVector(Astronomy.Body.Moon, utcDate, true);
-  const ecl = Astronomy.Ecliptic(vec);
-  const trop = ecl.elon;
-  const sid  = wrap360(trop - ayanDeg);
-  return {tropical: trop, sidereal: sid};
+window.shareResults=function(){
+  const text=document.getElementById('results').innerText;
+  if(navigator.share){navigator.share({title:'My Vimshottari Dasha',text});}
+  else{navigator.clipboard.writeText(text);alert('Results copied to clipboard');}
 }
 
-/* ---------- Nakshatra ---------- */
-function nakshatraFromSiderealLon(sid){
-  const span = 13 + 20/60; // 13°20' = 13.333...
-  const idx  = Math.floor(sid / span);
-  const startDeg = idx * span;
-  const into = sid - startDeg;
-  const frac = into / span;
-  const pada = Math.floor(frac*4)+1;
-  const [name, lord] = NAKS[idx];
-  return {index:idx, name, lord, pada, frac, startDeg, span};
-}
-
-/* ---------- Vimshottari builders ---------- */
-function buildMahadashaTimeline(birthUTC, startLord, startRemainingFrac){
-  const seq = [...LORD_ORDER];
-  while(seq[0]!==startLord) seq.push(seq.shift());
-
-  const out = [];
-  // first: remaining of starting lord
-  const firstYears = MD_YEARS[startLord] * startRemainingFrac;
-  let cursor = birthUTC;
-  out.push({i:1, lord:startLord, start:cursor, end:addDays(cursor, firstYears*DAYS_PER_YEAR), years:firstYears});
-  cursor = out[0].end;
-
-  let total=firstYears, i=1;
-  while(total < 120 - 1e-9){
-    const L = seq[i%9];
-    const yrs = MD_YEARS[L];
-    const start = cursor, end = addDays(start, yrs*DAYS_PER_YEAR);
-    out.push({i:i+1, lord:L, start, end, years:yrs});
-    cursor=end; total+=yrs; i++;
-  }
-  return out;
-}
-function antardashaFor(md){
-  const mdDays = md.years * DAYS_PER_YEAR;
-  const out = [];
-  let t = md.start;
-
-  // AD order always full LORD_ORDER starting with MD lord
-  const startIndex = LORD_ORDER.indexOf(md.lord);
-  for(let k=0;k<9;k++){
-    const sub = LORD_ORDER[(startIndex + k) % 9];
-    const ratioYears = MD_YEARS[sub]/120; // of MD duration
-    const durDays = mdDays * ratioYears;
-    out.push({lord:sub, start:t, end:addDays(t, durDays), years:md.years*ratioYears});
-    t = addDays(t, durDays);
-  }
-  return out;
-}
-
-/* ---------- UI glue ---------- */
-$('ayanType').addEventListener('change', e=>{
-  $('customAyanWrap').style.display = (e.target.value==='custom') ? 'block' : 'none';
-});
-$('sampleBtn').addEventListener('click', ()=>{
-  $('name').value='Sample Native';
-  $('dob').value='1998-09-18';
-  $('tob').value='08:15:00';
-  $('tz').value='+05:30';
-});
-$('shareBtn').addEventListener('click', ()=>{
-  const params = new URLSearchParams({
-    n:$('name').value, d:$('dob').value, t:$('tob').value, z:$('tz').value,
-    a:$('ayanType').value, c:$('customAyan').value
-  });
-  const url = location.origin + location.pathname + '#' + params.toString();
-  navigator.clipboard.writeText(url).then(()=>alert('Shareable link copied!'), ()=>prompt('Copy this link:', url));
-});
-function loadFromHash(){
-  if(!location.hash) return;
-  const q = new URLSearchParams(location.hash.slice(1));
-  $('name').value = q.get('n')||'';
-  $('dob').value  = q.get('d')||'';
-  $('tob').value  = q.get('t')||'';
-  $('tz').value   = q.get('z')||'';
-  const a = q.get('a')||'lahiri'; $('ayanType').value=a;
-  if(a==='custom'){ $('customAyanWrap').style.display='block'; $('customAyan').value = q.get('c')||''; }
-}
-window.addEventListener('hashchange', loadFromHash); loadFromHash();
-
-$('calcBtn').addEventListener('click', ()=>{
-  try{
-    const name = $('name').value || '—';
-    const dob = $('dob').value; const tob = $('tob').value || '00:00:00'; const tz = $('tz').value;
-    if(!dob || !tz) throw new Error('Please enter Date of Birth and Timezone.');
-
-    const birthUTC = toUTC(dob, tob, tz);
-
-    const ayType = $('ayanType').value;
-    const ayCustom = parseFloat($('customAyan').value||'0');
-    const ay = ayanamsaDegrees(birthUTC, ayType, ayCustom);
-
-    const mlon = moonLongitudes(birthUTC, ay);
-    const nk = nakshatraFromSiderealLon(mlon.sidereal);
-
-    const remFrac = 1 - nk.frac; // remaining part of starting MD at birth
-    const mdRows = buildMahadashaTimeline(birthUTC, nk.lord, remFrac);
-
-    $('summary').innerHTML =
-      `<strong>${name}</strong> — Born ${dob} ${tob} (UTC ${tz}).<br>
-       Sidereal Moon: <strong>${round(mlon.sidereal,3)}°</strong> • Nakshatra: <strong>${nk.name}</strong> (Pada ${nk.pada}) • MD Lord: <strong>${nk.lord}</strong>.`;
-    $('moonBox').innerHTML =
-      `Tropical lon: ${round(mlon.tropical,3)}° • Ayanāṁśa (${ayType}) ≈ ${round(ay,4)}°`;
-
-    // Fill MD table
-    const body = $('mdTable').querySelector('tbody'); body.innerHTML='';
-    mdRows.forEach((r, idx)=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${idx+1}</td><td><strong>${r.lord}</strong></td><td>${fmtUTC(r.start)}</td><td>${fmtUTC(r.end)}</td><td>${round(r.years,3)}</td>`;
-      tr.style.cursor='pointer';
-      tr.addEventListener('click', ()=>{
-        const ads = antardashaFor(r);
-        const div = document.createElement('div');
-        div.className='card';
-        let html = `<div class="small">Mahadasha: <strong>${r.lord}</strong> • ${fmtUTC(r.start)} → ${fmtUTC(r.end)}</div>`;
-        html += `<div style="overflow:auto"><table><thead><tr><th>#</th><th>Antardasha</th><th>Start</th><th>End</th><th>Years</th></tr></thead><tbody>`;
-        ads.forEach((a,i)=>{
-          html += `<tr><td>${i+1}</td><td><strong>${r.lord}</strong> / ${a.lord}</td><td>${fmtUTC(a.start)}</td><td>${fmtUTC(a.end)}</td><td>${round(a.years,4)}</td></tr>`;
-        });
-        html += `</tbody></table></div>`;
-        div.innerHTML = html;
-        const wrap = $('adWrap'); wrap.innerHTML=''; wrap.appendChild(div);
-        window.scrollTo({top:wrap.getBoundingClientRect().top + window.scrollY - 80, behavior:'smooth'});
-      });
-      body.appendChild(tr);
-    });
-
-    const first = mdRows[0];
-    $('mdInfo').textContent = `At birth you were in ${nk.lord} Mahadasha (${round(remFrac*100,2)}% remaining). First segment ends ${fmtUTC(first.end)}.`;
-
-  }catch(err){ alert(err.message); }
 });
 </script>
+</head>
+<body>
+<header>Divine Path | Vimshottari Dasha Calculator</header>
+<div class="container">
+  <label for="dob">Date of Birth:</label>
+  <input type="date" id="dob">
+
+  <label for="time">Time of Birth:</label>
+  <input type="time" id="time">
+
+  <label for="tz">Timezone Offset (e.g. +05:30):</label>
+  <input type="text" id="tz" placeholder="+05:30">
+
+  <button onclick="calculateDasha()">Calculate Dasha</button>
+
+  <div id="results" class="results"></div>
+</div>
 </body>
 </html>
